@@ -9,14 +9,17 @@
  * - Santiago Taracena Puga (20017)
  */
 
+// Librerías necesarias para el proyecto.
 #include <SDL.h>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
 
+// Constantes necesarias para el proyecto.
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
+// Estructura para representar las líneas a dibujar.
 struct Line {
   int x1, y1, x2, y2;
   int vx, vy;
@@ -29,6 +32,7 @@ struct Line {
   }
 }
 
+// Función main que ejecuta todo el código.
 int main(int argc, char* argv[]) {
   SDL_Init(SDL_INIT_VIDEO);
 
