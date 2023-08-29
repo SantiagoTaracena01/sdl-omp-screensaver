@@ -104,24 +104,32 @@ struct Line {
   }
 };
 
+// Función main que ejecuta todo el código.
 int main(int argc, char* argv[]) {
-  srand(static_cast<unsigned int>(time(nullptr))); // Initialize random seed
 
+  // Seed para la generación de números aleatorios.
+  srand(static_cast<unsigned int>(time(nullptr)));
+
+  // Verificación de la inicialización de SDL.
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
     std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
     return 1;
   }
 
+  // Instancia de la ventana de SDL.
   SDL_Window* window = SDL_CreateWindow("Moving Line Screensaver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
+  // Verificación de errores al iniciar la ventana.
   if (window == nullptr) {
     std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
     SDL_Quit();
     return 1;
   }
 
+  // Instancia del renderer de SDL.
   SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+  // Verificación de errores al iniciar el renderer.
   if (renderer == nullptr) {
     std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
     SDL_DestroyWindow(window);
@@ -129,14 +137,18 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  // Vector de líneas a utilizar.
   std::vector<Line> lines;
 
+  // Variables de eventos de cierre de la ventana.
   bool quit = false;
   SDL_Event e;
 
+  // Variables para llevar conteo del tiempo antes de iniciar una nueva línea.
   Uint32 lastNewLineTime = 0;
   Uint32 currentTime = SDL_GetTicks();
 
+  // Ciclos que detectan cuando la ventana se cierra.
   while (!quit) {
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_QUIT) {
@@ -144,12 +156,15 @@ int main(int argc, char* argv[]) {
       }
     }
 
+    // Actualización del tiempo transcurrido.
     currentTime = SDL_GetTicks();
 
+    // Factores para mover la línea horizontal o verticalmente.
     int xFactor = rand() % 2;
     int yFactor = !xFactor;
 
-    if (currentTime - lastNewLineTime >= NEW_LINE_INTERVAL_MS) {
+    // Instancia de una nueva línea cada cierto tiempo.
+    if ((currentTime - lastNewLineTime) >= NEW_LINE_INTERVAL_MS) {
       lastNewLineTime = currentTime;
       Line newLine(
         rand() % SCREEN_WIDTH * xFactor,
@@ -160,21 +175,26 @@ int main(int argc, char* argv[]) {
       lines.push_back(newLine);
     }
 
+    // Color de la pantalla de fondo.
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+    // Ciclo for que renderiza las líneas instanciadas con su color respectivo.
     for (Line& line : lines) {
       line.update();
       SDL_SetRenderDrawColor(renderer, line.color.r, line.color.g, line.color.b, line.color.a);
       SDL_RenderDrawLine(renderer, line.x1, line.y1, line.x2, line.y2);
     }
 
+    // Función que actualiza el frame.
     SDL_RenderPresent(renderer);
   }
 
+  // Finalización de todo lo relacionado a SDL.
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
 
+  // Retorno correcto del programa.
   return 0;
 }
