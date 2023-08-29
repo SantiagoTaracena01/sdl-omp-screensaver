@@ -38,11 +38,15 @@ const int NEW_LINE_INTERVAL_MS = 2000;
 const int MIN_DIRECTION_CHANGE_DISTANCE = 20;
 const double DIRECTION_CHANGE_PROBABILITY = 0.1;
 
+// Estructura que representa una línea.
 struct Line {
+
+  // Propiedades de posición, velocidad y color de la línea.
   int x1, y1, x2, y2;
-  int vx, vy; // Velocity components
+  int vx, vy;
   SDL_Color color;
 
+  // Constructor de la línea.
   Line(int startX, int startY, int endX, int endY) : x1(startX), y1(startY), x2(endX), y2(endY), vx(1), vy(0) {
     color.r = rand() % 256;
     color.g = rand() % 256;
@@ -50,43 +54,49 @@ struct Line {
     color.a = 255;
   }
 
+  // Función para actualizar la posición de la línea.
   void update() {
-    // Update the line's position based on velocity
+
+    // Cambio de la posición de la línea según la velocidad.
     x1 += vx;
     y1 += vy;
     x2 += vx;
     y2 += vy;
 
-    // Check if direction change is allowed based on distance and probability
-    if (x1 % MIN_DIRECTION_CHANGE_DISTANCE == 0 && y1 % MIN_DIRECTION_CHANGE_DISTANCE == 0) {
+    // Chequeo de la posibilidad de cambiar la dirección de la líena.
+    if (((x1 % MIN_DIRECTION_CHANGE_DISTANCE) == 0) && ((y1 % MIN_DIRECTION_CHANGE_DISTANCE) == 0)) {
       if (rand() / static_cast<double>(RAND_MAX) < DIRECTION_CHANGE_PROBABILITY) {
         changeDirection();
       }
     }
 
-    // Keep the line within screen bounds
-    if (x1 < 0 || x1 >= SCREEN_WIDTH || y1 < 0 || y1 >= SCREEN_HEIGHT) {
+    // Revisión de los límites de la pantalla.
+    if ((x1 < 0) || (x1 >= SCREEN_WIDTH) || (y1 < 0) || (y1 >= SCREEN_HEIGHT)) {
       changeDirection();
     }
   }
 
+  // Función para realizar un cambio de dirección.
   void changeDirection() {
-    // Change the direction to up, down, left, or right
+
+    // Próxima dirección de la línea.
     int direction = rand() % 4;
+
+    // Análisis y cambio de la dirección.
     switch (direction) {
-      case 0: // Up
+      case 0:
         vx = 0;
         vy = -1;
         break;
-      case 1: // Down
+      case 1:
         vx = 0;
         vy = 1;
         break;
-      case 2: // Left
+      case 2:
         vx = -1;
         vy = 0;
         break;
-      case 3: // Right
+      case 3:
         vx = 1;
         vy = 0;
         break;
