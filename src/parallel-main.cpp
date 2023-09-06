@@ -14,6 +14,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <omp.h>
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -23,7 +24,7 @@ const int SCREEN_FPS = 60;
 const int FPS_DELAY = (1000 / SCREEN_FPS);
 
 // Intervalo de tiempo para que aparezca un nuevo elemento en pantalla.
-const int NEW_CIRCLE_INTERVAL_MS = 2000;
+const int NEW_LINE_INTERVAL_MS = 2000;
 
 // Estructura que define el comportamiento de una aprticula
 struct Particle {
@@ -94,6 +95,14 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
 
 
 int main(int argc, char* argv[]) {
+
+    if (argc < 2) {
+        std::cerr << "Usage: ./main <num-threads>" << std::endl;
+        return 1;
+    }
+
+    int threadCount = strtol(argv[1], NULL, 10);
+
     // Seed aleatoria para generar números pseudoaleatorios para el proyecto.
     srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -126,6 +135,7 @@ int main(int argc, char* argv[]) {
 
     // Vector de particulas a renderizar.
     std::vector<Particle> particles;
+    particles.reserve(100000);
 
     // Variables útiles para cerrar la ventana.
     bool quit = false;
@@ -135,6 +145,19 @@ int main(int argc, char* argv[]) {
     // Tiempo transcurrido para generar un nuevo elemento.
     Uint32 lastNewParticleTime = 0;
     Uint32 currentTime = SDL_GetTicks();
+
+    #pragma omp parallel num_threads(threadCount)
+    {
+        int numThreads = omp_get_num_threads();
+        int threadId = omp_get_thread_num();
+
+        #pragma omp for
+        for (int i = 0; i < threadCount; i++) {
+            if ((i % numThreads) == threadId) {
+                particles.push_back(Particle());
+            }
+        }
+    }
 
     // Ciclos que mantienen la ventana abierta.
     while (!quit) {
@@ -150,13 +173,26 @@ int main(int argc, char* argv[]) {
         if (currentTime - lastFrameTime >= FPS_DELAY) {
 
             // Verifica si ha pasado al menos 2 segundos desde la última creación de partícula.
-            if (currentTime - lastNewParticleTime >= NEW_CIRCLE_INTERVAL_MS) {
+            if (currentTime - lastNewParticleTime >= NEW_LINE_INTERVAL_MS) {
                 lastNewParticleTime = currentTime;
-                particles.push_back(Particle());
+
+                #pragma omp parallel num_threads(threadCount)
+                {
+                    int numThreads = omp_get_num_threads();
+                    int threadId = omp_get_thread_num();
+
+                    #pragma omp for
+                    for (int i = 0; i < threadCount; i++) {
+                        if ((i % numThreads) == threadId) {
+                            particles.push_back(Particle());
+                        }
+                    }
+                }
             }
 
-            for (Particle& particle : particles) {
-                particle.update();
+            #pragma omp parallel for
+            for (int i = 0; i < particles.size(); i++) {
+                particles[i].update();
             }
 
             // Limpiar la pantalla
