@@ -29,7 +29,7 @@ const int SCREEN_FPS = 60;
 const int FPS_DELAY = (1000 / SCREEN_FPS);
 
 // Intervalo de tiempo para que aparezca un nuevo elemento en pantalla.
-const int NEW_CIRCLE_INTERVAL_MS = 2000;
+const int NEW_CIRCLE_INTERVAL_MS = 100;
 
 // Estructura que define el comportamiento de una aprticula
 struct Particle {
@@ -172,6 +172,9 @@ int main(int argc, char* argv[]) {
   // Vector de particulas a renderizar.
   std::vector<Particle> particles;
 
+  // Vector para almacenar los fps.
+  std::vector<float> fpsArray;
+
   // Variables útiles para cerrar la ventana.
   bool quit = false;
   SDL_Event e;
@@ -222,6 +225,7 @@ int main(int argc, char* argv[]) {
         std::string fpsText = "FPS count: " + std::to_string(static_cast<int>(fps));
         SDL_SetWindowTitle(window, fpsText.c_str());
         std::cout << "FPS count: " << fps << std::endl;
+        fpsArray.push_back(fps);
       }
 
       // Renderizado de la pantalla y cambio de tiempo.
@@ -234,6 +238,20 @@ int main(int argc, char* argv[]) {
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
+
+  // Suma de los frames para obtener el promedio.
+  float fpsSum = 0.0f;
+
+  // Obtención del valor de la suma de los frames.
+  for (float& fpsValue: fpsArray) {
+    fpsSum += fpsValue;
+  }
+
+  // Promedio de los frames.
+  float fpsAverage = (fpsSum / fpsArray.size());
+
+  // Impresión del framerate promedio.
+  std::cout << "Average FPS count: " << fpsAverage << std::endl;
 
   // Salida del programa, retorno exitoso.
   return 0;

@@ -140,6 +140,13 @@ int main(int argc, char* argv[]) {
    * threads a utilizar para la ejecución del código.
    */
 
+  if (argc < 2) {
+    std::cerr << "Usage: ./main <num-threads>" << std::endl;
+    return 1;
+  }
+
+  int threadCount = strtol(argv[1], NULL, 10);
+
   // Seed aleatoria para generar números pseudoaleatorios para el proyecto.
   srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -174,6 +181,10 @@ int main(int argc, char* argv[]) {
   std::vector<Particle> particles;
   particles.reserve(100000);
 
+  // Vector para almacenar los fps.
+  std::vector<float> fpsArray;
+  fpsArray.reserve(100000);
+
   // Variables útiles para cerrar la ventana.
   bool quit = false;
   SDL_Event e;
@@ -192,6 +203,7 @@ int main(int argc, char* argv[]) {
     #pragma omp for
     for (int i = 0; i < threadCount; i++) {
       if ((i % numThreads) == threadId) {
+        #pragma omp critical
         particles.push_back(Particle());
       }
     }
@@ -223,6 +235,7 @@ int main(int argc, char* argv[]) {
           #pragma omp for
           for (int i = 0; i < threadCount; i++) {
             if ((i % numThreads) == threadId) {
+              #pragma omp critical
               particles.push_back(Particle());
             }
           }
@@ -251,7 +264,11 @@ int main(int argc, char* argv[]) {
         std::string fpsText = "FPS count: " + std::to_string(static_cast<int>(fps));
         SDL_SetWindowTitle(window, fpsText.c_str());
         std::cout << "FPS count: " << fps << std::endl;
+        fpsArray.push_back(fps);
       }
+
+      // Barrera para la paralelización.
+      #pragma omp barrier
 
       // Renderizado de la pantalla y cambio de tiempo.
       SDL_RenderPresent(renderer);
@@ -263,6 +280,21 @@ int main(int argc, char* argv[]) {
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
+
+  // Suma de los frames para obtener el promedio.
+  float fpsSum = 0.0f;
+
+  // Obtención del valor de la suma de los frames.
+  for (float& fpsValue: fpsArray) {
+    std::cout << fpsValue << std::endl;
+    fpsSum += fpsValue;
+  }
+
+  // Promedio de los frames.
+  float fpsAverage = (fpsSum / fpsArray.size());
+
+  // Impresión del framerate promedio.
+  std::cout << "Average FPS count: " << fpsAverage << std::endl;
 
   // Salida del programa, retorno exitoso.
   return 0;
